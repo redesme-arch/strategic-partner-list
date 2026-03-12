@@ -495,8 +495,8 @@
   // ════════════════════════════════════════════════════
   // ⚙️  CONFIG — replace both URLs below!
   // ════════════════════════════════════════════════════
-  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby6ZEtb4y24NVxwUaAexDblC2R8efXo3O9zldpDKDKimhC2Z2cUIY9UOa8QwlVnHDdJ/exec";
-  const SHEETS_URL = "https://docs.google.com/spreadsheets/d/147yhWJyStmQk0rKZuFflUY80qUas5DnL1IYjglzs8a4/edit?usp=sharing";
+  const SCRIPT_URL = "https://script.google.com/macros/s/YOUR_SCRIPT_ID_HERE/exec";
+  const SHEETS_URL = "https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID_HERE/edit";
   // ════════════════════════════════════════════════════
 
   document.getElementById("sheetsLink").href = SHEETS_URL;
@@ -567,7 +567,7 @@
   // ── Load existing entries from Sheets ───────────────
   async function loadEntries() {
     try {
-      const r = await fetch(`${SCRIPT_URL}?action=get`, { mode: "cors" });
+      const r = await fetch(`${SCRIPT_URL}?action=get`);
       const j = await r.json();
       if (j.entries) entries = j.entries;
     } catch (_) { /* demo mode */ }
@@ -590,27 +590,16 @@
     btn.innerHTML = `<span class="spinner"></span>Registering...`;
 
     try {
-      const res = await fetch(SCRIPT_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "register", date: selectedDate, dorm, contact }),
-        mode: "cors"
-      });
-      const j = await res.json();
-      if (j.success) {
-        if (!entries[selectedDate]) entries[selectedDate] = [];
-        entries[selectedDate].push({ dorm, contact });
-        showSuccess(dorm, contact, selectedDate);
-      } else {
-        toast("❌ " + (j.message || "Failed, please try again!"));
-        btn.disabled = false;
-        btn.innerHTML = "Register Now ✦";
-      }
-    } catch (e) {
-      // Demo mode
+      const params = new URLSearchParams({ action: "register", date: selectedDate, dorm, contact });
+      const res = await fetch(`${SCRIPT_URL}?${params}`, { mode: "no-cors" });
+      // no-cors doesn't return readable response, so we assume success and verify via reload
       if (!entries[selectedDate]) entries[selectedDate] = [];
       entries[selectedDate].push({ dorm, contact });
       showSuccess(dorm, contact, selectedDate);
+    } catch (e) {
+      toast("❌ Failed to connect. Please try again!");
+      btn.disabled = false;
+      btn.innerHTML = "Register Now ✦";
     }
   }
 
